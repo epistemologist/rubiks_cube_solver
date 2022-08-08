@@ -83,30 +83,31 @@ def orientation_from_int(N: int, length: int, orientations: int) -> Orientation:
     return Orientation(ov, orientations)
 
 class Move:
-    def __init__(self, p: Permutation, o: Orientation):
-        assert len(o.ov) == len(p.pv)
+    def __init__(self, p: Permutation, o: Optional[Orientation], name: Optional[str]):
+        assert o is None or len(o.ov) == len(p.pv)
         self.o = o
         self.p = p
+        self.name = name
     def __matmul__(self, other):
-        assert isinstance(other, Move) and len(self.p) == len(other.p) and self.o.size() == other.o.size()
+        assert isinstance(other, Move) and len(self.p) == len(other.p) and (self.o is None and other.o is None) or self.o.size() == other.o.size()
         new_p = copy(self.p)
         new_p @= other.p
         self.p = new_p
-        new_ov = [None for i in range(len(self.p))]
-        for i in range(len(self.p)):
-            new_ov[i] = self.o[other.p[i] - 1]
-        self.o = Orientation(new_ov, self.o.states) @ other.o
+        if self.o:
+            new_ov = [None for i in range(len(self.p))]
+            for i in range(len(self.p)):
+                new_ov[i] = self.o[other.p[i] - 1]
+            self.o = Orientation(new_ov, self.o.states) @ other.o
         return self
     def __eq__(self, other):
         return isinstance(other, Move) and self.p == other.p and self.o == other.o
     def __int__(self):
-        return int(self.o)*self.p.max()+int(self.p)
+        return (int(self.o) if self.o else 0)*self.p.max()+int(self.p)
 
 
 def gen_move_table(move: Move):
     p_table, o_table = [], []
     num_pieces = len(move.p)
-    num_orientations = move.o.states
     print("Calcuating permutation table...")
     # Calculate permutation table
     for i in tqdm(range(move.p.max())):
@@ -115,11 +116,13 @@ def gen_move_table(move: Move):
         p_table.append(int(new_p))
     print("Calculating orientation table...")
     # Calculate orientation table
-    for i in tqdm(range(move.o.max())):
-        o_tmp = orientation_from_int(i, num_pieces, num_orientations)
-        new_ov = [o_tmp[move.p[j]-1] for j in range(num_pieces)]
-        new_o = Orientation(new_ov, num_orientations) @ move.o
-        o_table.append(int(new_o))
+    if move.o:
+        num_orientations = move.o.states
+        for i in tqdm(range(move.o.max())):
+            o_tmp = orientation_from_int(i, num_pieces, num_orientations)
+            new_ov = [o_tmp[move.p[j]-1] for j in range(num_pieces)]
+            new_o = Orientation(new_ov, num_orientations) @ move.o
+            o_table.append(int(new_o))
     return p_table, o_table
 
 def move_from_int(N: int, num_orientations: int, num_pieces: int) -> Move:
@@ -129,14 +132,28 @@ def move_from_int(N: int, num_orientations: int, num_pieces: int) -> Move:
     p = permutation_from_int(p_coord, num_pieces)
     return Move(p, o)
 
-class PieceState:
-    def __init__(self, num_pieces, orientations):
+# Without move tables
+class PieceStateSlow:
+    def __init__(self, num_pieces: int, num_orientations: int):
         p = permutation_from_int(0, num_pieces)
-        o = orientation_from_int(0, num_pieces, orientations)
+        o = orientation_from_int(0, num_pieces, num_orientations)
         self.state = Move(p, o)
-
     def apply_move(self, move: Move):
-        pass
+        self.state @= move
+
+# With move tables
+class PieceStateFast:
+    def __init__(self, num_pieces: int, num_orientations: int, moves: List[Move]):
+        self.p = 0
+        self.o = 0
+        self.p_table = dict()
+        self.o_table = dict()
+        for move in moves:
+            p_table, o_table = gen_move_table(move)
+            self.p_table[move.name] = p_table
+            self.o_table[move.name] = o_table
+    def apply_move(self, move: Move):
+        self.p, self.o = self.p_table[move.name][self.p], self.o if not (next_o := self.o_table[move.name][self.o]) else next_o
 
 def sanity_test():
     # Test if permutation to int and inverse are actually inverses
@@ -146,12 +163,3 @@ def sanity_test():
     for i in range(pow(6,4)):
         assert int(orientation_from_int(i,4,6)) == i
 
-R = Move(
-    Permutation([
-        1,3,6,4,2,5,7
-    ]),
-    Orientation([
-        0,2,1,0,1,2,0
-    ]
-    ,3)
-)
