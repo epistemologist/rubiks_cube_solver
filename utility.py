@@ -88,6 +88,8 @@ class Move:
         self.o = o
         self.p = p
         self.name = name
+    def __repr__(self):
+        return self.name
     def __matmul__(self, other):
         assert isinstance(other, Move) and len(self.p) == len(other.p) and (self.o is None and other.o is None) or self.o.size() == other.o.size()
         new_p = copy(self.p)
@@ -144,6 +146,10 @@ class PieceStateSlow:
 # With move tables
 class PieceStateFast:
     def __init__(self, num_pieces: int, num_orientations: int, moves: List[Move]):
+        self.num_pieces = num_pieces
+        self.num_orientations = num_orientations
+        assert all([len(move.p.pv) == num_pieces for move in moves])
+        assert all([move.o is None or move.o.states == num_orientations for move in moves])
         self.p = 0
         self.o = 0
         self.p_table = dict()
@@ -152,8 +158,14 @@ class PieceStateFast:
             p_table, o_table = gen_move_table(move)
             self.p_table[move.name] = p_table
             self.o_table[move.name] = o_table
+    def __repr__(self):
+        p_ = permutation_from_int(self.p, self.num_pieces)
+        o_ = orientation_from_int(self.o, self.num_pieces, self.num_orientations)
+        return f"p: {p_.pv}, o: {o_.ov}"
     def apply_move(self, move: Move):
-        self.p, self.o = self.p_table[move.name][self.p], self.o if not (next_o := self.o_table[move.name][self.o]) else next_o
+        self.p = self.p_table[move.name][self.p]
+        self.o = self.o if not self.o_table[move.name] else self.o_table[move.name][self.o]
+
 
 def sanity_test():
     # Test if permutation to int and inverse are actually inverses
