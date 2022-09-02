@@ -1,7 +1,10 @@
 from math import factorial
 from typing import *
 from copy import copy
-from tqdm import tqdm
+import tqdm as tqdm_
+
+TIMING = False
+tqdm = tqdm_.tqdm if TIMING else lambda x: x
 
 # Most of this code from https://www.jaapsch.net/puzzles/compindx.htm
 
@@ -91,15 +94,19 @@ class Move:
     def __repr__(self):
         return self.name
     def __matmul__(self, other):
-        assert isinstance(other, Move) and len(self.p) == len(other.p) and (self.o is None and other.o is None) or self.o.size() == other.o.size()
+        print("mat_mul: self, other: ", self, (self.p, self.o),  other, (other.p, other.o))
+        assert isinstance(other, Move) and len(self.p) == len(other.p)
         new_p = copy(self.p)
         new_p @= other.p
         self.p = new_p
         if self.o:
+            if other.o is None:
+                other.o = orientation_from_int(0, len(self.p), self.o.states)
             new_ov = [None for i in range(len(self.p))]
             for i in range(len(self.p)):
                 new_ov[i] = self.o[other.p[i] - 1]
             self.o = Orientation(new_ov, self.o.states) @ other.o
+#            self.o @= other.o
         return self
     def __eq__(self, other):
         return isinstance(other, Move) and self.p == other.p and self.o == other.o
@@ -139,7 +146,9 @@ class PieceStateSlow:
     def __init__(self, num_pieces: int, num_orientations: int):
         p = permutation_from_int(0, num_pieces)
         o = orientation_from_int(0, num_pieces, num_orientations)
-        self.state = Move(p, o)
+        self.state = Move(p, o, name="state")
+    def __repr__(self):
+        return f"p: {self.state.p}, o: {self.state.o}"
     def apply_move(self, move: Move):
         self.state @= move
 

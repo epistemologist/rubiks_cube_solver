@@ -26,7 +26,7 @@ Ri.name = "Ri"
 
 F = Move(
     p = Permutation([5,2,1,4,7,6,3]),
-    o = Orientation([2,0,1,0,1,0,2],3),
+    o = Orientation([2,0,1,0,2,0,1],3),
     name="F"
 )
 
@@ -38,7 +38,7 @@ Fi.name = "F'"
 
 class Cube222:
     def __init__(self):
-        self.corners = PieceStateFast(7, 3, [U, Ui, U2, F, Fi, F2, R, Ri, R2])
+        self.corners = PieceStateSlow(7, 3)
         self.moves = {
             "R": R,
             "R'": Ri,
@@ -51,15 +51,27 @@ class Cube222:
             "U2": U2
         }
     def _apply_move(self, move: str):
+#        print(self.moves[move])
         self.corners.apply_move(self.moves[move])
     def _apply_algorithm(self, moves: List[str]):
+        print(moves)
         for move in moves:
+            print("move", move)
             self._apply_move(move)
+#            print(self.corners)
 
-
-t_perm = "R U R' U' R' F R2 U' R' U' R U R' F'".split()
+"""
+moves = Cube222().moves
+for m1 in moves:
+    for m2 in moves:
+        if m1 != m2:
+            c = Cube222()
+            c._apply_move(m1)
+            c._apply_move(m2)
+            for i in range(3): c._apply_move(m1)
+            for i in range(3): c._apply_move(m2)
+            print(m1, m2, c.corners)
+"""
 cube = Cube222()
-cube._apply_algorithm(t_perm)
-
-
-
+cube._apply_algorithm("R U R' U' R' F R2 U' R' U' R U R' F'".split())
+print(cube.corners)
