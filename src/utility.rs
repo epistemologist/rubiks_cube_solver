@@ -11,45 +11,42 @@ pub fn factorial(n: u128) -> u128 {
 #[derive(PartialEq, Eq, Clone, Hash, Debug)]
 pub struct Permutation {
     pub n: usize,
-    pub pv: Vec<i8>
+    pub pv: Vec<i8>,
 }
 
 impl Add for Permutation {
-    
     type Output = Permutation;
 
     fn add(self, rhs: Permutation) -> Permutation {
         assert_eq!(self.n, rhs.n);
         // Instantiate a vector of 0s of length n
         let mut v = vec![0 as i8; self.n as usize];
-        for i in 0..self.n as usize{
+        for i in 0..self.n as usize {
             v[i] = self.pv[rhs.pv[i] as usize];
         }
-        Permutation{n: self.n, pv: v}
+        Permutation { n: self.n, pv: v }
     }
 }
 
-
-
 impl Permutation {
     pub fn new(n: usize, pv: Vec<i8>) -> Permutation {
-        Permutation{n: n, pv: pv}
+        Permutation { n: n, pv: pv }
     }
 
     pub fn identity(n: usize) -> Permutation {
         let mut v = vec![0 as i8; n as usize];
-        for i in 0..n as usize{
+        for i in 0..n as usize {
             v[i] = i as i8;
         }
-        Permutation{n: n, pv: v}
+        Permutation { n: n, pv: v }
     }
 
     pub fn inverse(&self) -> Permutation {
         let mut v = vec![0 as i8; self.n as usize];
-        for i in 0..self.n as usize{
+        for i in 0..self.n as usize {
             v[self.pv[i] as usize] = i as i8;
         }
-        Permutation{n: self.n, pv: v}
+        Permutation { n: self.n, pv: v }
     }
 
     pub fn to_int(&self) -> u128 {
@@ -57,8 +54,8 @@ impl Permutation {
         let mut t: u128 = 0;
         for i in 1..self.n as usize {
             t *= (self.n - i + 1) as u128;
-            for j in i+1..self.n+1 as usize {
-                if self.pv[i-1] > self.pv[j-1] {
+            for j in i + 1..self.n + 1 as usize {
+                if self.pv[i - 1] > self.pv[j - 1] {
                     t += 1;
                 }
             }
@@ -71,27 +68,23 @@ impl Permutation {
         let mut perm: Vec<i8> = vec![0; length];
         let mut n = N;
         for i in (1..length).rev() {
-            perm[i-1] = (n % ((length - i + 1) as u128)) as i8;
+            perm[i - 1] = (n % ((length - i + 1) as u128)) as i8;
             n /= (length - i + 1) as u128;
-            for j in i+1..length+1 {
-                if perm[j-1] >= perm[i-1] {
-                    perm[j-1] += 1;
+            for j in i + 1..length + 1 {
+                if perm[j - 1] >= perm[i - 1] {
+                    perm[j - 1] += 1;
                 }
             }
         }
         Permutation::new(length, perm)
-    } 
-
+    }
 }
-
-
-
 
 #[derive(PartialEq, Eq, Clone, Hash, Debug)]
 pub struct Orientation {
     pub n: usize,
     pub states: i8,
-    pub ov: Vec<i8>
+    pub ov: Vec<i8>,
 }
 
 impl Add for Orientation {
@@ -101,38 +94,54 @@ impl Add for Orientation {
         assert_eq!(self.n, rhs.n);
         assert_eq!(self.states, rhs.states);
         let mut v = vec![0 as i8; self.n as usize];
-        for i in 0..self.n as usize{
+        for i in 0..self.n as usize {
             v[i] = (self.ov[i] + rhs.ov[i]) % self.states;
         }
-        Orientation{n: self.n, states: self.states, ov: v}
+        Orientation {
+            n: self.n,
+            states: self.states,
+            ov: v,
+        }
     }
 }
 
 impl Orientation {
     pub fn new(n: usize, states: i8, ov: Vec<i8>) -> Orientation {
-        Orientation{n: n, states: states, ov: ov}
+        Orientation {
+            n: n,
+            states: states,
+            ov: ov,
+        }
     }
 
     pub fn identity(n: usize, states: i8) -> Orientation {
         let mut v = vec![0 as i8; n as usize];
-        for i in 0..n as usize{
+        for i in 0..n as usize {
             v[i] = 0;
         }
-        Orientation{n: n, states: states, ov: v}
+        Orientation {
+            n: n,
+            states: states,
+            ov: v,
+        }
     }
 
     pub fn inverse(&self) -> Orientation {
         let mut v = vec![0 as i8; self.n as usize];
-        for i in 0..self.n as usize{
+        for i in 0..self.n as usize {
             v[i] = (self.states - self.ov[i]) % self.states;
         }
-        Orientation{n: self.n, states: self.states, ov: v}
+        Orientation {
+            n: self.n,
+            states: self.states,
+            ov: v,
+        }
     }
 
     pub fn to_int(&self) -> u128 {
         // Implementation from https://www.jaapsch.net/puzzles/compindx.htm
         let mut t: u128 = 0;
-        for i in 0..self.n as usize{
+        for i in 0..self.n as usize {
             t *= self.states as u128;
             t += self.ov[i] as u128;
         }
@@ -149,12 +158,9 @@ impl Orientation {
         }
         Orientation::new(length, states, ov)
     }
-
 }
 
-
-
-
+/*
 // Make test cases
 #[cfg(test)]
 mod tests {
@@ -201,6 +207,7 @@ mod tests {
     }
 
 
-    
+
 }
 // Create a hashset of integers in Rust
+*/

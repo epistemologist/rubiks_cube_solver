@@ -1,6 +1,3 @@
-//mod utility;
-//use utility::*;
-
 use std::{collections::HashMap, hash::Hash};
 
 // Move struct
@@ -348,17 +345,19 @@ impl MoveTable {
     }
 }
 // Cube with move lookup
-struct CubeFast<'a> {
+struct CubeFast {
     pub eo: u16,
     pub co: u16,
     pub cp: u32,
     pub ep: u32,
-    pub move_info: &'a HashMap<&'a str, MoveTable>,
+    // pub move_info: &'a HashMap<&'a str, MoveTable>,
+    // TODO: fix this field
 }
 
-impl CubeFast<'_> {
-    // Constructor
-    pub fn new() -> CubeFast<'static> {
+impl CubeFast {
+    // Constructor (broken)
+
+    pub fn new() -> CubeFast {
         // Create move table
         let moves: Vec<Move> = [
             U, R, F, D, L, B, U2, R2, F2, D2, L2, B2, U3, R3, F3, D3, L3, B3,
@@ -441,7 +440,29 @@ impl CubeFast<'_> {
             co: 0,
             cp: 0,
             ep: 0,
-            move_info: &(move_info.clone()),
+            // move_info: &(move_info.clone()),
+        }
+    }
+}
+
+#[cfg(test)]
+
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_permutation_to_from_int() {
+        for i in 0..factorial(6) {
+            let p = Permutation::from_int(i, 6);
+            assert_eq!(p.to_int(), i);
+        }
+    }
+
+    #[test]
+    fn test_orientation_to_from_int() {
+        for i in 0..3_u16.pow(6) {
+            let o = Orientation::from_int(i, 6, 3);
+            assert_eq!(o.to_int(), i);
         }
     }
 }
